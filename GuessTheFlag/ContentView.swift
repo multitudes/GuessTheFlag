@@ -11,12 +11,16 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var showingScore = false
-    @State private var scoreTitle = ""
+    @State private var scoreTitle = "Lets start!"
     
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
     
     @State private var score = 0
+    
+    var showMessage: String {
+        return scoreTitle
+    }
     
     struct FlagImage: View {
         var country: String
@@ -30,6 +34,9 @@ struct ContentView: View {
         }
     }
     @State private var animationAmount: CGFloat = 1
+    @State private var currentDate = Date()
+    let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+    
     var body: some View {
         ZStack {
             LinearGradient(gradient: Gradient(colors: [.blue, .black]), startPoint: .top, endPoint: .bottom)
@@ -48,17 +55,27 @@ struct ContentView: View {
                         self.flagTapped(number)
                     }) {
                         FlagImage(country: self.countries[number])
+                            .onReceive(self.timer){ _ in
+                                self.animationAmount += 0.05
+                        }
                     }
-                    
-                }
+                }.scaleEffect(animationAmount)
+                    .animation(.interpolatingSpring(stiffness: 50, damping: 1))
                 Text("current score \(score)")
                     .foregroundColor(.white)
+                Text(scoreTitle)
+                    .foregroundColor(.white)
+                    .font(.title)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
                 Spacer()
-            } .alert(isPresented: $showingScore) {
-                Alert(title: Text(scoreTitle), message: Text("Your score is \(score)"), dismissButton: .default(Text("Continue")) {
-                    self.askQuestion()
-                    })
             }
+//            .alert(isPresented: $showingScore) {
+//                Alert(title: Text(scoreTitle), message: Text("Your score is \(score)"), dismissButton: .default(Text("Continue")) {
+//                    self.askQuestion()
+//
+//                    })
+//            }
         } 
     }
     func askQuestion() {
@@ -68,12 +85,17 @@ struct ContentView: View {
     func flagTapped(_ number: Int) {
         if number == correctAnswer {
             score += 1
-            scoreTitle = "Correct"
+            scoreTitle = "Correct!"
+            
         } else {
             score -= 1
-            scoreTitle = "Wrong! That was \(countries[number])!"
+            scoreTitle = """
+            Wrong!
+            That was \(countries[number])!
+            """
+            
         }
-        
+        askQuestion()
         showingScore = true
     }
 }
