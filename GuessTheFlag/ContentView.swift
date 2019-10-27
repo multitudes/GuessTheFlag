@@ -15,7 +15,7 @@ struct ContentView: View {
     
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
-
+    
     @State private var score = 0
     
     struct FlagImage: View {
@@ -26,37 +26,38 @@ struct ContentView: View {
                 .renderingMode(.original)
                 .cornerRadius(20)
                 .overlay(RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.white, lineWidth: 2))
-             }
+                    .stroke(Color.white, lineWidth: 2))
+        }
     }
-    
+    @State private var animationAmount: CGFloat = 1
     var body: some View {
         ZStack {
             LinearGradient(gradient: Gradient(colors: [.blue, .black]), startPoint: .top, endPoint: .bottom)
-            .edgesIgnoringSafeArea(.all)
+                .edgesIgnoringSafeArea(.all)
             VStack(spacing: 30) {
-                  VStack {
+                VStack {
                     Text("Tap the flag of").foregroundColor(.white)
                     Text(countries[correctAnswer])
                         .font(.largeTitle)
                         .fontWeight(.black)
                         .foregroundColor(.white)
-                    }
-                
-            ForEach(0 ..< 3) { number in
-                Button(action: {
-                   self.flagTapped(number)
-                }) {
-                    FlagImage(country: self.countries[number])
-               }
-                
                 }
-                Text("current score \(score)").foregroundColor(.white)
+                
+                ForEach(0 ..< 3) { number in
+                    Button(action: {
+                        self.flagTapped(number)
+                    }) {
+                        FlagImage(country: self.countries[number])
+                    }
+                    
+                }
+                Text("current score \(score)")
+                    .foregroundColor(.white)
                 Spacer()
             } .alert(isPresented: $showingScore) {
                 Alert(title: Text(scoreTitle), message: Text("Your score is \(score)"), dismissButton: .default(Text("Continue")) {
                     self.askQuestion()
-                })
+                    })
             }
         } 
     }
@@ -72,7 +73,7 @@ struct ContentView: View {
             score -= 1
             scoreTitle = "Wrong! That was \(countries[number])!"
         }
-
+        
         showingScore = true
     }
 }
