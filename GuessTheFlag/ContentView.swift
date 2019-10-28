@@ -5,19 +5,23 @@
 //  Created by Laurent B on 13/10/2019.
 //  Copyright © 2019 Laurent B. All rights reserved.
 //
-
+import UIKit
 import SwiftUI
 
 
 struct ContentView: View {
     @State private var showingScore = false
     @State private var scoreTitle = "Lets start!"
-    
+
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
     
     @State private var score = 0
-    
+
+    @State private var flagOpacity = [1.0, 1.0, 1.0]
+    @State private var flagBlur: [CGFloat] = [0, 0, 0]
+    @State private var animationAmount: [CGFloat] = [1.0, 1.0, 1.0]
+    @State var allowhittesting = true
     var showMessage: String {
         return scoreTitle
     }
@@ -33,10 +37,11 @@ struct ContentView: View {
                     .stroke(Color.white, lineWidth: 2))
         }
     }
-    @State private var animationAmount: CGFloat = 1
-    @State private var currentDate = Date()
-    let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
     
+    // timer
+    @State private var currentDate = Date()
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    @State var timeRemaining = 4
     var body: some View {
         ZStack {
             LinearGradient(gradient: Gradient(colors: [.blue, .black]), startPoint: .top, endPoint: .bottom)
@@ -55,12 +60,16 @@ struct ContentView: View {
                         self.flagTapped(number)
                     }) {
                         FlagImage(country: self.countries[number])
-                            .onReceive(self.timer){ _ in
-                                self.animationAmount += 0.05
-                        }
+
                     }
-                }.scaleEffect(animationAmount)
-                    .animation(.interpolatingSpring(stiffness: 50, damping: 1))
+                    .opacity(self.flagOpacity[number])
+                    .blur(radius: self.flagBlur[number])
+                    .scaleEffect(self.animationAmount[number])
+                    .allowsHitTesting(self.allowhittesting ? true : false)
+                    .animation(.default)
+                     }
+                
+                
                 Text("current score \(score)")
                     .foregroundColor(.white)
                 Text(scoreTitle)
@@ -68,35 +77,63 @@ struct ContentView: View {
                     .font(.title)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
+                Text("Details go here.")
+                .transition(.move(edge: .bottom))
                 Spacer()
             }
-//            .alert(isPresented: $showingScore) {
-//                Alert(title: Text(scoreTitle), message: Text("Your score is \(score)"), dismissButton: .default(Text("Continue")) {
-//                    self.askQuestion()
-//
-//                    })
-//            }
+            //            .alert(isPresented: $showingScore) {
+            //                Alert(title: Text(scoreTitle), message: Text("Your score is \(score)"), dismissButton: .default(Text("Continue")) {
+            //                    self.askQuestion()
+            //
+            //                    })
+            //            }
         } 
     }
     func askQuestion() {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+        animationAmount = [1.0, 1.0, 1.0]
+        flagOpacity = [1.0, 1.0, 1.0]
+        flagBlur = [0, 0, 0]
+        allowhittesting = true
     }
     func flagTapped(_ number: Int) {
+        allowhittesting = false
         if number == correctAnswer {
             score += 1
             scoreTitle = "Correct!"
-            
+            correctAnimation()
         } else {
             score -= 1
             scoreTitle = """
             Wrong!
             That was \(countries[number])!
             """
+            wrongAnimation()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.askQuestion()
             
         }
-        askQuestion()
+        
         showingScore = true
+    }
+    func correctAnimation() {
+        for flag in 0...2 {
+            if flag == correctAnswer {
+                animationAmount[flag] = 1.40
+            } else {
+                flagOpacity[flag] = 0.25
+            }
+        }
+    }
+    
+    func wrongAnimation() {
+        for flag in 0...2 {
+            if flag != correctAnswer {
+                flagBlur[flag] = 6
+            }
+        }
     }
 }
 
